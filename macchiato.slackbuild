@@ -7,6 +7,7 @@
 # while the core code was written by Etienne Perot <etienne at perot dot me>.
 
 # This script and Macchiato as whole are licensed under the BSD License (three clauses).
+# git clone https://github.com/EtiennePerot/macchiato.git
 
 set -eu
 
@@ -16,30 +17,28 @@ if [ "$UID" != 0 ]; then echo "Please run me as root. Quit..."; exit 1; fi
 
 
 PRGNAM=macchiato
-VERSION=${VERSION:-20170604}
-BUILD=${BUILD:-1}
-TAG=${TAG:-_SBo}
+VERSION=${VERSION:-20170826}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_MD}
 
 # Ignore the arch identification since we assume you are using 64bit OS :).
 ARCH=x86_64
 
 CWD=$(pwd)
-DOWNDIR="/usr/local"
-PKG="$DOWNDIR/macchiato"
+TMP="/tmp"
+PKG="$TMP/package-macchiato"
+DOWNDIR="$PKG/macchiato-git"
 
-echo "Delete $PKG if it exists."
-rm -rf "$PKG"
+rm -rf $PKG
+mkdir -p $PKG
 
 # Ignore the compilation configure options since it doesn't need to compile.
 # Ignore file/dir cleaning and making.
 
-# Download from git repo.
-cd $DOWNDIR
-git clone https://github.com/EtiennePerot/macchiato.git
 
 # Configure it
-CONFDIR="/etc/macchiato.d"
-mkdir -p $CONFDIR
+CONFDIR="etc/macchiato.d"
+mkdir -p $CWD/$CONFDIR
 
 ## Detect what NIC this device has.
 NIC=($(ls /sys/class/net/))
@@ -49,27 +48,37 @@ echo "It has ${NIC[@]}."
 for nic in ${NIC[@]};
     do
     if [ "$nic" != "lo" ];then
-        cp "$PKG/conf/sample.sh.example" "$CONFDIR/$nic.sh"
+        install -D -m 755 $CWD/conf/sample.sh.example $PKG/$CONFDIR/$nic.sh
     else
 	continue
     fi
 done
 
-# Refine the executable to be usable.
-chmod u+x "$PKG/macchiato"
 
-ln -s "$PKG/macchiato" "$DOWNDIR/bin/macchiato"
+# Ready for makepkg.
+install -D -m 744 $CWD/macchiato $PKG/usr/local/macchiato/macchiato
+install -D -m 744 $CWD/functions.sh $PKG/usr/local/macchiato/functions.sh
+
+for file in $(ls $CWD/oui) ; do
+    install -D -m 755 $CWD/oui/$file $PKG/usr/local/macchiato/oui/$file
+done
+
+for file in $(ls $CWD/usage) ; do
+    install -D -m 755 $CWD/usage/$file $PKG/usr/local/macchiato/usage/$file
+done
 
 # Udev?
 ## Firstly detect if udev/eudev exists.
 
 if which udevd &> /dev/null; then
 	echo "udev/eudev exists. Go ahead."
-	cp "$CWD/install-udev-rules.sh" "$CONFDIR/"
+	install -D -m 0644 $CWD/install-udev-rules.sh $PKG/etc/udev/rules.d/90-macchiato.rules
 else
 	echo "udev/eudev seems not to be installed. Nothing to do."
 fi
 
-echo "Installation finished."
+cd $PKG
+/sbin/makepkg -l y -c n $TMP/$PRGNAM-$VERSION-$BUILD-$TAG.tgz
+
 exit 0
 
