@@ -17,7 +17,7 @@ if [ "$UID" != 0 ]; then echo "Please run me as root. Quit..."; exit 1; fi
 
 
 PRGNAM=macchiato
-VERSION=${VERSION:-20170826}
+VERSION=${VERSION:-20170902}
 BUILD=${BUILD:-2}
 TAG=${TAG:-_MD}
 
@@ -38,7 +38,6 @@ mkdir -p $PKG
 
 # Configure it
 CONFDIR="etc/macchiato.d"
-mkdir -p $CWD/$CONFDIR
 
 ## Detect what NIC this device has.
 NIC=($(ls /sys/class/net/))
@@ -54,17 +53,18 @@ for nic in ${NIC[@]};
     fi
 done
 
+INSTDIR="$PKG/opt"
 
 # Ready for makepkg.
-install -D -m 744 $CWD/macchiato $PKG/usr/local/macchiato/macchiato
-install -D -m 744 $CWD/functions.sh $PKG/usr/local/macchiato/functions.sh
+install -D -m 744 $CWD/macchiato $INSTDIR/macchiato/macchiato
+install -D -m 744 $CWD/functions.sh $INSTDIR/macchiato/functions.sh
 
 for file in $(ls $CWD/oui) ; do
-    install -D -m 755 $CWD/oui/$file $PKG/usr/local/macchiato/oui/$file
+    install -D -m 755 $CWD/oui/$file $INSTDIR/macchiato/oui/$file
 done
 
 for file in $(ls $CWD/usage) ; do
-    install -D -m 755 $CWD/usage/$file $PKG/usr/local/macchiato/usage/$file
+    install -D -m 755 $CWD/usage/$file $INSTDIR/macchiato/usage/$file
 done
 
 # Udev?
