@@ -13,12 +13,12 @@ set -eu
 
 # This script needs root privilege.
 
-if [ "$UID" != 0 ]; then echo "Please run me as root. Quit..."; exit 1; fi
+#if [ "$UID" != 0 ]; then echo "Please run me as root. Quit..."; exit 1; fi
 
 
 PRGNAM=macchiato
-VERSION=${VERSION:-20170902}
-BUILD=${BUILD:-2}
+VERSION=${VERSION:-20170910}
+BUILD=${BUILD:-3}
 TAG=${TAG:-_MD}
 
 # Ignore the arch identification since we assume you are using 64bit OS :).
@@ -67,15 +67,14 @@ for file in $(ls $CWD/usage) ; do
     install -D -m 755 $CWD/usage/$file $INSTDIR/macchiato/usage/$file
 done
 
-# Udev?
-## Firstly detect if udev/eudev exists.
+# Udev? We don't install rule script for macchiato now.
 
-if which udevd &> /dev/null; then
-	echo "udev/eudev exists. Go ahead."
-	install -D -m 0644 $CWD/install-udev-rules.sh $PKG/etc/udev/rules.d/90-macchiato.rules
-else
-	echo "udev/eudev seems not to be installed. Nothing to do."
-fi
+#if which udevd &> /dev/null; then
+#	echo "udev/eudev exists. Go ahead."
+#	install -D -m 0644 $CWD/install-udev-rules.sh $PKG/etc/udev/rules.d/90-macchiato.rules
+#else
+#	echo "udev/eudev seems not to be installed. Nothing to do."
+#fi
 
 cd $PKG
 /sbin/makepkg -l y -c n $TMP/$PRGNAM-$VERSION-$BUILD-$TAG.tgz
